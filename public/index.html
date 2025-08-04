@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerOfAum Admin Metrics Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .metric:last-child {
+            border-bottom: none;
+        }
+        .metric-label {
+            font-weight: bold;
+            color: #666;
+        }
+        .metric-value {
+            font-size: 1.2em;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .currency {
+            color: #28a745;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .api-endpoints {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .endpoint {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>PowerOfAum Admin Dashboard</h1>
+    <p class="subtitle">Module H: Platform Metrics Overview</p>
+    
+    <div class="dashboard">
+        <div class="card">
+            <h3>💰 Revenue Metrics</h3>
+            <div id="revenue-metrics" class="loading">Loading...</div>
+        </div>
+        
+        <div class="card">
+            <h3>📊 Platform Metrics</h3>
+            <div id="platform-metrics" class="loading">Loading...</div>
+        </div>
+    </div>
+    
+    <div class="api-endpoints">
+        <h3>🔗 API Endpoints</h3>
+        <div class="endpoint">GET /api/platform-commission-metrics</div>
+        <div class="endpoint">GET /api/overall-metrics</div>
+    </div>
+    
+    <script>
+        async function loadMetrics() {
+            try {
+                // Load revenue metrics
+                const revenueResponse = await fetch('/api/platform-commission-metrics');
+                const revenueData = await revenueResponse.json();
+                
+                const revenueMetricsHtml = `
+                    <div class="metric">
+                        <span class="metric-label">Total Gross Revenue</span>
+                        <span class="metric-value currency">$${(revenueData.totalGrossRevenueCents / 100).toLocaleString()}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Total Commission</span>
+                        <span class="metric-value currency">$${(revenueData.totalCommissionCents / 100).toLocaleString()}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Commission Rate</span>
+                        <span class="metric-value">${((revenueData.totalCommissionCents / revenueData.totalGrossRevenueCents) * 100).toFixed(1)}%</span>
+                    </div>
+                `;
+                document.getElementById('revenue-metrics').innerHTML = revenueMetricsHtml;
+                
+                // Load platform metrics
+                const platformResponse = await fetch('/api/overall-metrics');
+                const platformData = await platformResponse.json();
+                
+                const platformMetricsHtml = `
+                    <div class="metric">
+                        <span class="metric-label">Total Users</span>
+                        <span class="metric-value">${platformData.totalUsers.toLocaleString()}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Active Subscriptions</span>
+                        <span class="metric-value">${platformData.totalSubscriptions.toLocaleString()}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Add-On Sales</span>
+                        <span class="metric-value">${platformData.totalAddOnSales.toLocaleString()}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Pro Trials</span>
+                        <span class="metric-value">${platformData.totalProTrials.toLocaleString()}</span>
+                    </div>
+                `;
+                document.getElementById('platform-metrics').innerHTML = platformMetricsHtml;
+                
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+                document.getElementById('revenue-metrics').innerHTML = '<div class="metric">Error loading data</div>';
+                document.getElementById('platform-metrics').innerHTML = '<div class="metric">Error loading data</div>';
+            }
+        }
+        
+        // Load metrics on page load
+        loadMetrics();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadMetrics, 30000);
+    </script>
+</body>
+</html>
